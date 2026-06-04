@@ -5,6 +5,7 @@ import { Mascota } from './mascota.entity';
 import { Especie } from '../especies/especie.entity';
 import { CreateMascotaDto } from './dto/create-mascota.dto';
 import { UpdateMascotaDto } from './dto/update-mascota.dto';
+import { FiltroMascotaDto } from './dto/filtro-mascota.dto';
 
 @Injectable()
 export class MascotasService {
@@ -31,8 +32,32 @@ export class MascotasService {
         return this.mascotaRepository.save(mascota);
     }
 
-    findAll() {
-        return this.mascotaRepository.find();
+
+    async findAll(filtros: FiltroMascotaDto) {
+        const query = this.mascotaRepository.createQueryBuilder('mascota')
+            .leftJoinAndSelect('mascota.especie', 'especie');
+
+        if (filtros.especieId) {
+            query.andWhere('especie.id = :especieId', { especieId: filtros.especieId });
+        }
+        if (filtros.vacunado) {
+            const isVacunado = filtros.vacunado === 'true';
+            query.andWhere('mascota.vacunado = :isVacunado', { isVacunado });
+        }
+
+        if (filtros.buscar) {
+            query.andWhere(
+                '(mascota.nombre ILIKE :buscar OR mascota.chip ILIKE :buscar)',
+                { buscar: `%${filtros.buscar}%` }
+            );
+        }
+
+        if (filtros.ordenarPor) {
+            const direccion = filtros.orden?.toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
+            query.orderBy(`mascota.${filtros.ordenarPor}`, direccion);
+        }
+
+        return await query.getMany();
     }
 
     async findOne(id: string) {

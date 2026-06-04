@@ -1,10 +1,12 @@
 
 
 
-import { Controller, Get, Post, Put, Delete, Body, Param } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query } from '@nestjs/common';
 import { MascotasService } from './mascotas.service';
 import { CreateMascotaDto } from './dto/create-mascota.dto';
 import { UpdateMascotaDto } from './dto/update-mascota.dto';
+import { FiltroMascotaDto } from './dto/filtro-mascota.dto';
+
 
 @Controller('mascotas')
 export class MascotasController{
@@ -15,9 +17,9 @@ export class MascotasController{
     return this.mascotasService.create(createMascotaDto);
   }
 
-  @Get()
-  findAll() {
-    return this.mascotasService.findAll();
+  @Get() 
+  findAll(@Query() filtros: FiltroMascotaDto) {
+    return this.mascotasService.findAll(filtros);
   }
 
   @Get(':id')
